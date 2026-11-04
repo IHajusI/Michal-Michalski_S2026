@@ -19,7 +19,7 @@ public class ProstePoruszanie : MonoBehaviour
 
     [Header("Sprawdzanie kolizji z ziemią")]
     public Transform groundCheckPozycja;
-    public Vector2 groundCheckRozmiar = new Vector2(0.5f, 0.05f);
+    public Vector2 groundCheckRozmiar = new Vector2(0.4f, 0.05f);
     public LayerMask groundLayer;
     // transform reprezentuje dane na temat pozycji, rotacji i rozmiaru obiektu do którego jest "przylepiony
     // vector tu robi jako "linijka", rozmiar pudełka który będzie sprawdzał kolizje. czyli jego jeden i drugi bok
@@ -28,18 +28,22 @@ public class ProstePoruszanie : MonoBehaviour
     // a LayerMask dopisać jeszcze co to
 
 
-    //zmienna horizontalMovement to ruch w osi X, jego wartość zależy od sekcji linijek po 27
+    //zmienna horizontalMovement to ruch w osi X, jego wartość zależy od sekcji linijek po 42
     //Vector2 to dana która przechowuje dwie liczby, X i Y
     float horizontalMovement;
 
     void Start()
     {
-
+        body = GetComponent<Rigidbody2D>();
+       
+    
     }
 
-    void Update()
+    void Update ()
     { //przy każdej klatce gry prędkość w osi X jest ustawiana jako horizontal movement razy zmienna moveSpeed (oś y jest w trybie "odczytaj i zostaw jak jest")
         body.velocity = new Vector2(horizontalMovement * moveSpeed, body.velocity.y);
+       
+
     }
     // LEWO PRAWO
     public void Move(InputAction.CallbackContext context)
@@ -53,17 +57,36 @@ public class ProstePoruszanie : MonoBehaviour
         //rigidbody sprawia że gracz opada (grawitacja) input skoku tylko dodaje mu tymczasową siłę pchającą do góry
         // lewa i prawa część nawiasu to prędkości w osiach x i y, wpisanie po prostu "body.velocity" znaczy "odczytaj jaka jest teraz i neich tak zostanie
         // a wpisanie zmiennej takiej jak maxJump po prawej sprawia że czyta to właśnie z tej zmiennej
-        if (context.performed)
+        if (isGrounded())
         {
-            body.velocity = new Vector2(body.velocity.x, maxJump);
+            if (context.performed)
+            {
+                body.velocity = new Vector2(body.velocity.x, maxJump);
+                Debug.Log(context.performed + " trzymany");
+            
+            }
+            else if (context.canceled)
+            {
+                body.velocity = new Vector2(body.velocity.x, body.velocity.y * maxTapJump);
+                Debug.Log(context.canceled + "wciśnięty");
+            }
+
+            //UNITY NIE WIDZI WCIŚNIĘCIA SAMEGO, DO NAPRAWY
+        
 
         }
-        //jeżeli context został anulowany (klawisz przestał być trzymany) skok będzie mniejszy o wartość zmiennej maxTapJump, 0.5 to pół skoku 0.1 to jedna dziesiąta itd.
-        else if (context.canceled)
-        {
-            body.velocity = new Vector2(body.velocity.x, body.velocity.y * maxTapJump);
-        }
+        
     }
+    // ta zmienna zmienia wartość kiedy gracz dotyka ziemii
+    private bool isGrounded()
+    {
+        if(Physics2D.OverlapBox(groundCheckPozycja.position, groundCheckRozmiar, 0, groundLayer))
+        {
+            return true;
+        }
+        else return false;
+    }
+
     // sekcja sprawdzania czy jesteśmy na ziemii
     // gizmos to mały box, aktualnie podłączony do "create empty" pod nazwą GroundCheck
     //pierwsza linia ustawia kolor, druga jego pozycję i rozmiar 
@@ -75,7 +98,7 @@ public class ProstePoruszanie : MonoBehaviour
     }
 
 
-
+   
 
 
 }
